@@ -55,6 +55,10 @@ algorithm:
   adv_estimator: grpo
   use_kl_in_reward: False
 
+custom_reward_function:
+  path: /root/verl/recipe/LogicRL/reward_function.py
+  name: compute_score
+  
 trainer:
   total_epochs: 5
   project_name: Logic-RL
