@@ -1,7 +1,7 @@
-#!/usr/bin bash
+#!/usr/bin/env bash
 set -xeuo pipefail
+
 # 环境变量
-# export VLLM_ATTENTION_BACKEND=XFORMERS
 export NVLS_ENABLE=1
 export TORCH_CUDA_ALLOW_TF32=1
 export VLLM_USE_V1=1

@@ -63,7 +63,7 @@ trainer:
   total_epochs: 5
   project_name: Logic-RL
   experiment_name: qwen2.5-3b_k3plus_token_mean
-  logger: ['console', 'swandb']
+  logger: ['console', 'swanlab']
   log_val_generations: 10
   nnodes: 1
   n_gpus_per_node: 4
