@@ -135,6 +135,7 @@ def compute_data_metrics(batch: DataProto, use_critic: bool = True) -> dict[str,
     valid_adv = torch.masked_select(advantages, response_mask)
     valid_returns = torch.masked_select(returns, response_mask)
 
+
     if use_critic:
         values = batch.batch["values"]
         valid_values = torch.masked_select(values, response_mask)
@@ -155,6 +156,35 @@ def compute_data_metrics(batch: DataProto, use_critic: bool = True) -> dict[str,
         )
     else:
         raise ValueError("All samples are aborted, this should not happen.")
+
+# Custom reward metric
+    # Custom Reward Metrics
+    total_samples = sequence_score.numel()
+
+    # Fully correct answers: score == 3.0
+    all_correct = torch.sum(sequence_score == 3.0).float() / total_samples
+
+    # Structural format errors: score == -3.0
+    format_error = torch.sum(sequence_score == -3.0).float() / total_samples
+
+    # Partially correct answers: score == 0.0
+    partial_correct = torch.sum(sequence_score == 0.0).float() / total_samples
+
+    # Completely wrong answers: score == -0.5
+    completely_wrong = torch.sum(sequence_score == -0.5).float() / total_samples
+
+    # Unparseable/empty answers: score == -1.0
+    unparseable = torch.sum(sequence_score == -1.0).float() / total_samples
+
+    # Summary Metrics
+    format_pass = torch.sum(sequence_score >= 0).float() / total_samples
+    positive_reward = torch.sum(sequence_score > 0).float() / total_samples
+    negative_reward = torch.sum(sequence_score < 0).float() / total_samples
+
+    # Training Stage Indicators
+    parsing_capability = torch.sum(sequence_score >= -1.0).float() / total_samples
+    reasoning_capability = torch.sum(sequence_score >= 0).float() / total_samples
+    advanced_capability = torch.sum(sequence_score == 3.0).float() / total_samples
 
     metrics = {
         # score
@@ -206,6 +236,19 @@ def compute_data_metrics(batch: DataProto, use_critic: bool = True) -> dict[str,
         "prompt_length/max": torch.max(prompt_length).detach().item(),
         "prompt_length/min": torch.min(prompt_length).detach().item(),
         "prompt_length/clip_ratio": torch.mean(torch.eq(prompt_length, max_prompt_length).float()).detach().item(),
+        # Custom reward metrics
+        "reward/all_correct_ratio": all_correct.detach().item(),
+        "reward/format_error_ratio": format_error.detach().item(),
+        "reward/partial_correct_ratio": partial_correct.detach().item(),
+        "reward/completely_wrong_ratio": completely_wrong.detach().item(),
+        "reward/unparseable_ratio": unparseable.detach().item(),
+        "reward/format_pass_ratio": format_pass.detach().item(),
+        "reward/positive_ratio": positive_reward.detach().item(),
+        "reward/negative_ratio": negative_reward.detach().item(),
+        "reward/basic_capability": format_pass.detach().item(),
+        "reward/parsing_capability": parsing_capability.detach().item(),
+        "reward/reasoning_capability": reasoning_capability.detach().item(),
+        "reward/advanced_capability": advanced_capability.detach().item(),
     }
 
     # multi-turn conversation
